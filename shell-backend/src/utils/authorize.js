@@ -2,14 +2,13 @@ const jwt = require('jsonwebtoken')
 const isEmpty = require('./LangUtils')
 const env = require('../../env')
 
-const authenticate = async token => {
+const authorize = async token => {
   try {
     if (!token) return { error: 'JWT required', status: 401 }
-    // if token is empty return { error: 'JWT required', status: 401 }
-    let verify = await jwt.verify(token, env.JWT_KEY)
-    // verify token with jwt.verify and token secret from env
 
-    // if token is expired return { error: 'JWT expired', status: 401 }
+    let verify = await jwt.verify(token, env.JWT_KEY)
+    console.log(verify)
+
     if (verify.exp > Date.now()) return { error: 'JWT expired', status: 401 }
     return true
   } catch (error) {
@@ -19,4 +18,4 @@ const authenticate = async token => {
   }
 }
 
-module.exports = authenticate
+module.exports = authorize

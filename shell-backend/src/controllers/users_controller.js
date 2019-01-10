@@ -1,15 +1,13 @@
 const model = require('../models/users_model')
-const { promisify } = require('util')
 const jwt = require('jsonwebtoken')
-const signJwt = promisify(jwt.sign)
 const bcrypt = require('bcryptjs')
-const authenticate = require('../utils/authenticate')
 const env = require('../../env')
+const authorize = require('../utils/authorize')
 let usersValidators = require('../utils/validators/users_validator')
 
 const getAllUsers = async (req, res, next) => {
   try {
-    let authorization = authenticate(req.headers.authorization)
+    let authorization = await authorize(req.headers.authorization)
     if (authorization.error) {
       return next(authorization)
     }
@@ -23,7 +21,7 @@ const getAllUsers = async (req, res, next) => {
 
 const getUserById = async (req, res, next) => {
   try {
-    let authorization = authenticate(req.headers.authorization)
+    let authorization = await authorize(req.headers.authorization)
     if (authorization.error) {
       return next(authorization)
     }
@@ -33,145 +31,134 @@ const getUserById = async (req, res, next) => {
     if (user.error == 'error retrieving user') {
       return next(user)
     }
-    delete result.hashedPassword
-    return res.status(200).json(result)
+    delete user.hashedPassword
+    return res.status(200).json(user)
   } catch (error) {
     return next(error)
   }
 }
 
-const getUserByUsername = (req, res, next) => {
-  let promise = model.getUserByUsername(req.params.username.toLowerCase())
-
-  promise.then(result => {
-    return result.error ? next(result) : res.status(200).json(result)
-  })
-
-  promise.catch(error => {
-    next(error)
-  })
+const getUserByUsername = async (req, res, next) => {
+  try {
+    let user = await model.getUserByUsername(req.params.username.toLowerCase())
+    return user.error ? next(user) : res.status(200).json(user)
+  } catch (error) {
+    return next(error)
+  }
 }
 
 const loginUser = async (req, res, next) => {
-  const credentials = req.body
-
-  // find user in database using username off of request body
-  const user = await model.getUserByUsername(credentials.username.toLowerCase())
-
-  // if no match, respond with 404 not found
-  if (user.error) {
-    return next(user)
-  }
-
-  // if user found, compare payload password with result from getByUsername with bcrypt.js
-
-  const isValid = await bcrypt.compare(
-    credentials.password,
-    user.hashedPassword
-  )
-
-  // if password is valid omit hashedPassword from user body
-
-  if (isValid) {
-    delete user.hashedPassword
-
-    // create JWT token
-    const timeIssued = Math.floor(Date.now() / 1000)
-    const timeExpires = timeIssued + 86400 * 28
-    const token = await signJwt(
-      {
-        iss: 'auth_test',
-        aud: 'auth_test',
-        iat: timeIssued,
-        exp: timeExpires,
-        identity: user.id,
-      },
-      env.JWT_KEY
+  try {
+    const credentials = req.body
+    // find user in database using username off of request body
+    const user = await model.getUserByUsername(
+      credentials.username.toLowerCase()
     )
-
-    // attach token to response header
-    // respond with status 200 and user object
-
-    return res
-      .status(200)
-      .set({ authorization: token })
-      .json(user)
+    // if no match, respond with 404 not found
+    if (user.error) {
+      return next(user)
+    }
+    // if user found, compare payload password with result from getByUsername with bcrypt.js
+    const isValid = await bcrypt.compare(
+      credentials.password,
+      user.hashedPassword
+    )
+    // if password is valid omit hashedPassword from user body
+    if (isValid) {
+      delete user.hashedPassword
+      // create JWT token
+      const timeIssued = Math.floor(Date.now() / 1000)
+      const timeExpires = timeIssued + 86400 * 28
+      const token = await jwt.sign(
+        {
+          iss: 'auth_test',
+          aud: 'auth_test',
+          iat: timeIssued,
+          exp: timeExpires,
+          identity: user.id,
+        },
+        env.JWT_KEY
+      )
+      // attach token to response header
+      // respond with status 200 and user object
+      user.token = token
+      return res
+        .status(200)
+        .set({ authorization: token })
+        .json(user)
+    }
+    //respond with 404 and error message if not found
+    return next({ error: 'username or password is incorrect', status: 400 })
+  } catch (error) {
+    return next(error)
   }
-
-  //respond with 404 and error message if not found
-  return next({ error: 'username or password is incorrect', status: 400 })
 }
 
 const createUser = async (req, res, next) => {
-  let payload = req.body
-  let isValid = usersValidators.createUser(payload)
-  if (!isValid) return next(isValid)
+  try {
+    let payload = req.body
+    let isValid = usersValidators.createUser(payload)
+    if (!isValid) return next(isValid)
 
-  payload.profile_pic =
-    'https://cdn1.iconfinder.com/data/icons/ios-edge-line-12/25/User-Square-512.png'
+    payload.profile_pic =
+      'https://cdn1.iconfinder.com/data/icons/ios-edge-line-12/25/User-Square-512.png'
 
-  let doesUsernameExist = await model.getUserByUsername(
-    payload.username.toLowerCase()
-  )
+    let doesUsernameExist = await model.getUserByUsername(
+      payload.username.toLowerCase()
+    )
 
-  let doesEmailExist = await model.getUserByUsername(
-    payload.email.toLowerCase()
-  )
+    let doesEmailExist = await model.getUserByUsername(
+      payload.email.toLowerCase()
+    )
 
-  if (doesEmailExist.email) {
-    return next({ error: 'that email is taken', status: '404' })
+    if (doesEmailExist.email) {
+      return next({ error: 'that email is taken', status: '404' })
+    }
+
+    if (doesUsernameExist.username) {
+      return next({ error: 'that username is taken', status: '404' })
+    }
+    let user = await model.createUser(payload)
+    delete user[0].hashedPassword
+    return user.error ? next(user) : res.status(201).json(user)
+  } catch (error) {
+    return next(error)
   }
-
-  if (doesUsernameExist.username) {
-    return next({ error: 'that username is taken', status: '404' })
-  }
-
-  let promise = model.createUser(payload)
-
-  promise.then(result => {
-    delete result[0].hashedPassword
-    return result.error ? next(result) : res.status(201).json(result)
-  })
-
-  promise.catch(error => {
-    next(error)
-  })
 }
 
-const deleteUser = (req, res, next) => {
-  let id = Number(req.params.id)
+const deleteUser = async (req, res, next) => {
+  try {
+    let id = Number(req.params.id)
 
-  let promise = model.deleteUser(id)
-
-  promise.then(result => {
-    res.status(201).json(result)
-  })
-
-  promise.catch(error => {
+    let user = await model.deleteUser(id)
+    return res.status(201).json(user)
+  } catch (error) {
     next(error)
-  })
-}
-
-const updateUser = (req, res, next) => {
-  let id = Number(req.params.id)
-  let payload = req.body
-  let promise = model.updateUser(id, payload)
-
-  promise.then(result => {
-    res.status(201).json(result)
-  })
-
-  promise.catch(error => {
-    next(error)
-  })
-}
-
-const getToken = (req, res, next) => {
-  let authorization = authenticate(req.headers.authorization)
-  if (authorization.error) {
-    return next(authorization)
   }
-  res.status(200).json({ message: 'token valid' })
+}
+
+const updateUser = async (req, res, next) => {
+  try {
+    let id = Number(req.params.id)
+    let payload = req.body
+    let user = await model.updateUser(id, payload)
+
+    return res.status(201).json(user)
+  } catch (error) {
+    return next(error)
+  }
+}
+
+const getToken = async (req, res, next) => {
+  try {
+    let authorization = await authorize(req.headers.authorization)
+    if (authorization.error) {
+      return next(authorization)
+    }
+    return res.status(200).json({ message: 'token valid' })
+  } catch (error) {
+    return next(error)
+  }
 }
 
 module.exports = {

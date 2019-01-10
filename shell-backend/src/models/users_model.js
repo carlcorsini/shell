@@ -1,100 +1,71 @@
 const usersQuery = require('../queries/users_queries')
 const bcrypt = require('bcryptjs')
 
-const getAllUsers = () => {
-  users = usersQuery.getAllUsers()
-
-  return users.then(result => {
-    return result
-  })
+const getAllUsers = async () => {
+  try {
+    let users = await usersQuery.getAllUsers()
+    return users
+  } catch (error) {
+    return next(error)
+  }
 }
 
-const getUserById = id => {
-  user = usersQuery.getUserById(id)
-
-  return user.then(result => {
-    return !result ? { message: 'user not found', status: 404 } : result
-  })
+const getUserById = async id => {
+  try {
+    let user = await usersQuery.getUserById(id)
+    return !user ? { message: 'user not found', status: 404 } : user
+  } catch (error) {
+    return next(error)
+  }
 }
 
-const getUserByUsername = username => {
-  user = usersQuery.getUserByUsername(username)
-  return user.then(result => {
-    return !result
+const getUserByUsername = async username => {
+  try {
+    let user = await usersQuery.getUserByUsername(username)
+
+    return !user
       ? { error: 'username or password incorrect', status: 404 }
-      : result
-  })
+      : user
+  } catch (error) {
+    return next(error)
+  }
 }
 
-const loginUser = payload => {
-  user = usersQuery.loginUser(payload)
+const createUser = async payload => {
+  try {
+    payload.hashedPassword = await bcrypt.hash(payload.password, 10)
+    delete payload.password
 
-  return user.then(result => {
-    return result
-  })
+    let user = await usersQuery.createUser(payload)
+    return !user ? { error: 'user was not created', status: 404 } : user
+  } catch (error) {
+    return next(error)
+  }
 }
 
-const createUser = payload => {
-  payload.hashedPassword = bcrypt.hashSync(payload.password, 10)
-  delete payload.password
-
-  user = usersQuery.createUser(payload)
-
-  return user.then(result => {
-    return !result ? { error: 'user was not created', status: 404 } : result
-  })
+const deleteUser = async id => {
+  try {
+    let user = await usersQuery.deleteUser(id)
+    return user
+  } catch (error) {
+    return next(error)
+  }
 }
 
-const getUserSongs = id => {
-  songs = usersQuery.getUserSongs(id)
-
-  return songs.then(result => {
-    return result
-  })
-}
-
-const getFollowers = id => {
-  friends = usersQuery.getFollowers(id)
-
-  return friends.then(result => {
-    return result
-  })
-}
-
-const getFollowing = id => {
-  friends = usersQuery.getFollowing(id)
-
-  return friends.then(result => {
-    return result
-  })
-}
-
-const deleteUser = id => {
-  user = usersQuery.deleteUser(id)
-
-  return user.then(result => {
-    return result
-  })
-}
-
-const updateUser = (id, payload) => {
-  user = usersQuery.updateUser(id, payload)
-
-  return user.then(result => {
-    return result
-  })
+const updateUser = async (id, payload) => {
+  try {
+    let user = await usersQuery.updateUser(id, payload)
+    return user
+  } catch (error) {
+    return next(error)
+  }
 }
 
 module.exports = {
   getAllUsers,
   getUserById,
-  loginUser,
   getUserByUsername,
   createUser,
-  getUserSongs,
   deleteUser,
   updateUser,
-  getUserSongs,
-  getFollowers,
-  getFollowing
 }
