@@ -7,6 +7,7 @@ const signUpValidator = {
 }
 
 const createUser = payload => {
+
   let payloadKeys = Object.keys(payload)
   if (!payload) return { error: { status: 400, message: 'no payload sent' } }
   if (payloadKeys.length !== 5)
@@ -16,6 +17,7 @@ const createUser = payload => {
       return { error: { status: 400, message: `unexpected ${key} field` } }
     }
   }
+  
   return true
 }
 
