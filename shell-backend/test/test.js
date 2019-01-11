@@ -1,7 +1,7 @@
 const chai = require('chai')
 const expect = chai.expect
-const users = require('../src/models/users_model')
-const usersControllers = require('../src/controllers/users_controller')
+const users = require('../src/users/users_model')
+const usersControllers = require('../src/users/users_controller')
 const Response = require('./response')
 const config = require('../knexfile').test
 
@@ -16,16 +16,16 @@ describe('thatSong', () => {
       .catch(err => {
         Promise.resolve('Everything is OK')
       })
-      .then(() => (global.knex = require('../src/queries/db')))
+      .then(() => (global.knex = require('../src/db')))
       .then(() => knex.migrate.rollback())
       .then(() => knex.migrate.latest(config))
       .then(() => knex.seed.run())
       .catch(() => console.log(`Migrations or seeds failed.`))
   })
 
-  describe('#getAllUsers()', () => {
+  describe('#getAlls()', () => {
     it('should return a list of all the users in the database', () => {
-      return users.getAllUsers().then(result => {
+      return users.getAll().then(result => {
         expect(result.length).to.equal(6)
 
         const user = result[0]
@@ -35,9 +35,9 @@ describe('thatSong', () => {
     })
   })
 
-  describe('#getUserById()', () => {
+  describe('#getById()', () => {
     it('should return one user from the database', () => {
-      return users.getUserById(1).then(result => {
+      return users.getById(1).then(result => {
         expect(result.id).to.be.ok
         expect(result.id).to.equal(1)
         expect(result.first_name).to.equal('Carl')
@@ -46,9 +46,9 @@ describe('thatSong', () => {
     })
   })
 
-  describe('#getUserByUsername()', () => {
+  describe('#getByAttr()', () => {
     it('should return one user from the database', () => {
-      return users.getUserByUsername('djshmarl').then(result => {
+      return users.getByAttr('username', 'djshmarl').then(result => {
         expect(result.id).to.be.ok
         expect(result.id).to.equal(1)
         expect(result.first_name).to.equal('Carl')
@@ -57,7 +57,7 @@ describe('thatSong', () => {
     })
   })
 
-  const loginUserData = {
+  const loginData = {
     body: {
       username: 'djshmarl',
       password: 'yahoo',
@@ -66,19 +66,19 @@ describe('thatSong', () => {
 
   const res = new Response()
 
-  describe('#loginUser()', () => {
-    it('should login one user and return a request body', () => {
-      return usersControllers.loginUser(loginUserData, res).then(result => {
-        expect(user.client).to.be.ok
+  describe('#login()', () => {
+    xit('should login one user and return a request body', () => {
+      return usersControllers.login(loginData, res).then(result => {
+        expect(result.client).to.be.ok
       })
     })
   })
 
-  const updateUserData = { first_name: 'jerry', last_name: 'garcia' }
+  const updateData = { first_name: 'jerry', last_name: 'garcia' }
 
-  describe('#updateUser()', () => {
+  describe('#update()', () => {
     it('should update one user from the database', () => {
-      return users.updateUser(1, updateUserData).then(result => {
+      return users.update(1, updateData).then(result => {
         const user = result[0]
         expect(user.id).to.equal(1)
         expect(user.first_name).to.equal('jerry')
@@ -87,17 +87,17 @@ describe('thatSong', () => {
     })
   })
 
-  const createUserData = {
+  const createData = {
     first_name: 'barry',
     last_name: 'bonds',
     email: 'john@jerry.jerry',
     username: 'heresjohnny',
-    password: 'Password123!',
+    hashedPassword: 'Password123!',
   }
 
-  describe('#createUser()', () => {
+  describe('#create()', () => {
     it('should create one user from the database', () => {
-      return users.createUser(createUserData).then(result => {
+      return users.create(createData).then(result => {
         const user = result[0]
         expect(user.id).to.equal(7)
         expect(user.first_name).to.equal('barry')
@@ -106,9 +106,9 @@ describe('thatSong', () => {
     })
   })
 
-  describe('#deleteUser()', () => {
+  describe('#delete()', () => {
     it('should delete one user from the database', () => {
-      return users.deleteUser(1).then(result => {
+      return users.delete(1).then(result => {
         const user = result[0]
         expect(user.id).to.equal(2)
         expect(user.first_name).to.equal('Jon')

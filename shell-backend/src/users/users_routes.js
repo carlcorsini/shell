@@ -2,10 +2,6 @@ const express = require('express')
 const router = express.Router()
 const ctrl = require('./users_controller')
 
-// ===============================================
-// GET ROUTES FOR USER PROFILE
-// ===============================================
-
 router.get('/', ctrl.getAll)
 router.get('/:id', ctrl.getById)
 router.post('/login', ctrl.login)

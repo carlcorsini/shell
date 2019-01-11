@@ -9,7 +9,6 @@ class EntityQuery {
   }
 
   getById(id) {
-    console.log('hey')
     return this.db(this.entity)
       .where('id', id)
       .first()
@@ -17,12 +16,12 @@ class EntityQuery {
 
   getByAttr(attr, id) {
     return this.db(this.entity)
-      .where(attr, id)
+      .whereRaw(`Lower(${attr}) LIKE ?`, `%${id}%`)
+      .orWhereRaw(`Upper(${attr}) LIKE ?`, `%${id}%`)
       .first()
   }
 
   getByEitherOr(either, or, id) {
-    console.log('hey query')
     return this.db(this.entity)
       .whereRaw(`Lower(${either}) LIKE ?`, `%${id}%`)
       .orWhereRaw(`Upper(${either}) LIKE ?`, `%${id}%`)
@@ -38,7 +37,6 @@ class EntityQuery {
   }
 
   update(id, payload) {
-    console.log('hey')
     return this.db(this.entity)
       .where('id', id)
       .update(payload)
@@ -46,7 +44,6 @@ class EntityQuery {
   }
 
   delete(id) {
-    console.log(id, 'hey')
     return this.db(this.entity)
       .where('id', id)
       .del()

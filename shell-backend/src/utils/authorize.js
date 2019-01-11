@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken')
-const isEmpty = require('./LangUtils')
 const env = require('../../env')
 
 const authorize = async token => {

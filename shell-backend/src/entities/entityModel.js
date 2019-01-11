@@ -1,6 +1,7 @@
 class EntityModel {
-  constructor(query) {
+  constructor(query, entity) {
     this.query = query
+    this.entity = entity
   }
 
   async getAll() {
@@ -23,12 +24,11 @@ class EntityModel {
 
   async getByAttr(attr, id) {
     try {
-      console.log('hey model attr', attr, id)
       let entity = await this.query.getByAttr(attr, id)
-      console.log(entity)
+
       return !entity
         ? {
-            error: `${attr} with attribute ${id} not found`,
+            error: `${this.entity} with ${attr} ${id} not found`,
             status: 404,
           }
         : entity

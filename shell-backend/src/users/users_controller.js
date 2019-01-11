@@ -54,14 +54,6 @@ class UsersController extends EntityController {
       )
 
       if (isValid) {
-        // let [followers, following] = await Promise.all([
-        //   this.model.getFollowers(user.id),
-        //   this.model.getFollowing(user.id),
-        // ])
-        //
-        // user.followers = followers
-        // user.following = following
-
         delete user.hashedPassword
 
         const timeIssued = Math.floor(Date.now() / 1000)
@@ -122,20 +114,19 @@ class UsersController extends EntityController {
       }
 
       if (doesUsernameExist.username) {
-        console.log('hey')
         return next({ error: 'that username is taken', status: '404' })
       }
-      // if (!doesEmailExist && !doesUsernameExist) {
-      payload.hashedPassword = await this.middleware.bcrypt.hash(
-        payload.password,
-        10
-      )
-      delete payload.password
+      if (!doesEmailExist && !doesUsernameExist) {
+        payload.hashedPassword = await this.middleware.bcrypt.hash(
+          payload.password,
+          10
+        )
+        delete payload.password
 
-      let user = await this.model.create(payload)
-      delete user[0].hashedPassword
-      return user.error ? next(user) : res.status(201).json(user)
-      // }
+        let user = await this.model.create(payload)
+        delete user[0].hashedPassword
+        return user.error ? next(user) : res.status(201).json(user)
+      }
     } catch (error) {
       return next(error)
     }
