@@ -73,7 +73,6 @@ class EntityModel {
 
   async delete(id) {
     try {
-      console.log('hey', id, 'model')
       let entity = await this.query.delete(id)
       return entity
     } catch (error) {

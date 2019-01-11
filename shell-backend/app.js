@@ -9,7 +9,7 @@ if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'))
 app.use(bodyParser.json())
 app.use(cors())
 
-const userRoutes = require('./src/routes/users_routes.js')
+const userRoutes = require('./src/users/users_routes.js')
 
 app.use('/users', userRoutes)
 
