@@ -12,6 +12,7 @@ class UsersController extends EntityController {
     this.login = this.login.bind(this)
     this.token = this.token.bind(this)
     this.getById = this.getById.bind(this)
+    this.create = this.create.bind(this)
   }
   async getById(req, res, next) {
     try {
@@ -98,6 +99,43 @@ class UsersController extends EntityController {
         return next(authorization)
       }
       return res.status(200).json({ message: 'token valid' })
+    } catch (error) {
+      return next(error)
+    }
+  }
+  async create(req, res, next) {
+    try {
+      let payload = req.body
+      let isValid = this.middleware.usersValidators.createUser(payload)
+      if (!isValid) return next(isValid)
+
+      payload.profile_pic =
+        'https://cdn1.iconfinder.com/data/icons/ios-edge-line-12/25/User-Square-512.png'
+
+      let [doesEmailExist, doesUsernameExist] = await Promise.all([
+        this.model.getByAttr('username', payload.username),
+        this.model.getByAttr('email', payload.email),
+      ])
+
+      if (doesEmailExist.email) {
+        return next({ error: 'that email is taken', status: '404' })
+      }
+
+      if (doesUsernameExist.username) {
+        console.log('hey')
+        return next({ error: 'that username is taken', status: '404' })
+      }
+      // if (!doesEmailExist && !doesUsernameExist) {
+      payload.hashedPassword = await this.middleware.bcrypt.hash(
+        payload.password,
+        10
+      )
+      delete payload.password
+
+      let user = await this.model.create(payload)
+      delete user[0].hashedPassword
+      return user.error ? next(user) : res.status(201).json(user)
+      // }
     } catch (error) {
       return next(error)
     }
