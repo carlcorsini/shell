@@ -6,7 +6,6 @@ class EntityController {
     this.create = this.create.bind(this)
     this.getAll = this.getAll.bind(this)
     this.getById = this.getById.bind(this)
-    // this.getByEitherOr = this.getByEitherOr.bind(this)
     this.update = this.update.bind(this)
     this.delete = this.delete.bind(this)
   }
@@ -47,33 +46,6 @@ class EntityController {
       return next(error)
     }
   }
-
-  async getByAttr(req, res, next, attr) {
-    try {
-      let entity = await this.model.getByAttr(
-        attr,
-        req.params.username.toLowerCase()
-      )
-      return entity.error ? next(entity) : res.status(200).json(entity)
-    } catch (error) {
-      return next(error)
-    }
-  }
-
-  // async getByEitherOr(either, or, id) {
-  //   try {
-  //     console.log(either, or, id)
-  //     let entity = await this.query.getByEitherOr(either, or, id)
-  //     return !entity
-  //       ? {
-  //           error: `${either} or ${or} with attribute ${id} not found`,
-  //           status: 404,
-  //         }
-  //       : entity
-  //   } catch (error) {
-  //     return error
-  //   }
-  // }
 
   async create(req, res, next) {
     try {

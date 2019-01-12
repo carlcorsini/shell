@@ -6,7 +6,6 @@ const authorize = async token => {
     if (!token) return { error: 'JWT required', status: 401 }
 
     let verify = await jwt.verify(token, env.JWT_KEY)
-    console.log(verify)
 
     if (verify.exp > Date.now()) return { error: 'JWT expired', status: 401 }
     return true
