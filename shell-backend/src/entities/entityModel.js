@@ -39,7 +39,6 @@ class EntityModel {
 
   async getByEitherOr(either, or, id) {
     try {
-      console.log(either, or, id)
       let entity = await this.query.getByEitherOr(either, or, id)
       return !entity
         ? {
@@ -53,7 +52,6 @@ class EntityModel {
   }
 
   async create(payload) {
-    console.log('hey create model')
     try {
       let entity = await this.query.create(payload)
       return !entity ? { error: 'entity was not created', status: 404 } : entity
