@@ -10,8 +10,10 @@ app.use(bodyParser.json())
 app.use(cors())
 
 const userRoutes = require('./src/users/users_routes.js')
+const itemRoutes = require('./src/items/items_routes.js')
 
 app.use('/users', userRoutes)
+app.use('/items', itemRoutes)
 
 app.all('*', (req, res, next) => res.sendStatus(404))
 
