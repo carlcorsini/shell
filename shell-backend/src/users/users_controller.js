@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs')
 const model = require('./users_model')
 const env = require('../../env')
 const authorize = require('../utils/authorize')
-let usersValidators = require('./users_validator')
+let userValidators = require('./users_validator')
 let EntityController = require('../entities/entityController')
 
 class UsersController extends EntityController {
@@ -98,7 +98,7 @@ class UsersController extends EntityController {
   async create(req, res, next) {
     try {
       let payload = req.body
-      let isValid = this.middleware.usersValidators.createUser(payload)
+      let isValid = this.middleware.validators.create(payload)
       if (!isValid) return next(isValid)
 
       payload.profile_pic =
@@ -133,6 +133,6 @@ class UsersController extends EntityController {
   }
 }
 
-const middleware = { authorize, usersValidators, bcrypt, jwt }
+const middleware = { authorize, bcrypt, jwt }
 
-module.exports = new UsersController(model, middleware, env)
+module.exports = new UsersController(model, middleware, userValidators, env)

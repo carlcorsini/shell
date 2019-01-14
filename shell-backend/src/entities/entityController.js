@@ -1,7 +1,8 @@
 class EntityController {
-  constructor(model, middleware, env) {
+  constructor(model, middleware, validators, env) {
     this.model = model
     this.middleware = middleware
+    this.validators = validators
     this.env = env
     this.create = this.create.bind(this)
     this.getAll = this.getAll.bind(this)
@@ -50,7 +51,7 @@ class EntityController {
   async create(req, res, next) {
     try {
       let payload = req.body
-      let isValid = this.middleware.usersValidators.createUser(payload)
+      let isValid = this.validators.create(payload)
       if (!isValid) return next(isValid)
 
       let entity = await this.model.create(payload)

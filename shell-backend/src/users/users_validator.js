@@ -1,4 +1,4 @@
-const signUpValidator = {
+const payloadValidator = {
   first_name: 'test',
   last_name: 'testLast',
   username: 'testusername',
@@ -6,13 +6,13 @@ const signUpValidator = {
   password: 'testpasword',
 }
 
-const createUser = payload => {
+const create = payload => {
   let payloadKeys = Object.keys(payload)
   if (!payload) return { error: { status: 400, message: 'no payload sent' } }
   if (payloadKeys.length !== 5)
     return { error: { status: 400, message: 'missing or extra fields' } }
   for (key in payload) {
-    if (!signUpValidator.hasOwnProperty(key)) {
+    if (!payloadValidator.hasOwnProperty(key)) {
       return { error: { status: 400, message: `unexpected ${key} field` } }
     }
   }
@@ -20,4 +20,4 @@ const createUser = payload => {
   return true
 }
 
-module.exports = { createUser }
+module.exports = { create }

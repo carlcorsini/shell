@@ -1,4 +1,4 @@
-const entityModel = require('../entities/entityModel')
 const itemsQuery = require('./items_queries')
+const EntityModel = require('../entities/entityModel')
 
-module.exports = new entityModel(itemsQuery, 'items')
+module.exports = new EntityModel(itemsQuery, 'items')
